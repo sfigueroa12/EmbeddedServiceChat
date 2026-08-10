@@ -1,0 +1,27 @@
+<html>
+  <script type='text/javascript'>
+  	function initEmbeddedMessaging() {
+  		try 
+        window.addEventListener("onEmbeddedMessagingReady", e => {
+            embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({
+              "Username": 'sfigueroa@ayesa-digital.com',
+            });
+        });
+  			embeddedservice_bootstrap.settings.language = 'es'; // For example, enter 'en' or 'en-US'
+  
+  			embeddedservice_bootstrap.init(
+  				'00Dba000002x8Ob',
+  				'FB_chn_Enhanced_Chat_SAC',
+  				'https://polaris1--devsac.sandbox.my.site.com/ESWFBchnEnhancedChatS1784625543677',
+  				{
+  					scrt2URL: 'https://polaris1--devsac.sandbox.my.salesforce-scrt.com'
+  				}
+  			);
+  		} catch (err) {
+  			console.error('Error loading Embedded Messaging: ', err);
+  		}
+  	};
+  </script>
+  <script type='text/javascript' src='https://polaris1--devsac.sandbox.my.site.com/ESWFBchnEnhancedChatS1784625543677/assets/js/bootstrap.min.js' onload='initEmbeddedMessaging()'></script>
+</html>
+
