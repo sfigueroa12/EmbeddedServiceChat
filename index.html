@@ -1,27 +1,40 @@
-<html>
-  <script type='text/javascript'>
-  	function initEmbeddedMessaging() {
-  		try {
-			window.addEventListener("onEmbeddedMessagingReady", e => {
-				embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({
-				"Username": 'sfigueroa@ayesa-digital.com',
-				});
-			});
-  			embeddedservice_bootstrap.settings.language = 'es'; // For example, enter 'en' or 'en-US'
-  
-  			embeddedservice_bootstrap.init(
-  				'00Dba000002x8Ob',
-  				'FB_chn_Enhanced_Chat_SAC',
-  				'https://polaris1--devsac.sandbox.my.site.com/ESWFBchnEnhancedChatS1784625543677',
-  				{
-  					scrt2URL: 'https://polaris1--devsac.sandbox.my.salesforce-scrt.com'
-  				}
-  			);
-  		} catch (err) {
-  			console.error('Error loading Embedded Messaging: ', err);
-  		}
-  	};
-  </script>
-  <script type='text/javascript' src='https://polaris1--devsac.sandbox.my.site.com/ESWFBchnEnhancedChatS1784625543677/assets/js/bootstrap.min.js' onload='initEmbeddedMessaging()'></script>
-</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enhanced Chat Test</title>
+</head>
+<body>
+  <h1>Prueba Enhanced Chat</h1>
+  <p>Si todo está bien configurado, verás el botón de chat en la esquina inferior.</p>
 
+  <script type="text/javascript">
+    function initEmbeddedMessaging() {
+      try {
+        window.addEventListener("onEmbeddedMessagingReady", () => {
+          embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({
+            Username: 'sfigueroa@ayesa-digital.com'
+          });
+        });
+        embeddedservice_bootstrap.settings.language = 'es';
+        embeddedservice_bootstrap.init(
+          '00Dba000002x8Ob',
+          'FB_chn_Enhanced_Chat_SAC',
+          'https://polaris1--devsac.sandbox.my.site.com/ESWFBchnEnhancedChatS1784625543677',
+          {
+            scrt2URL: 'https://polaris1--devsac.sandbox.my.salesforce-scrt.com'
+          }
+        );
+      } catch (err) {
+        console.error('Error loading Embedded Messaging: ', err);
+      }
+    }
+  </script>
+  <script
+    type="text/javascript"
+    src="https://polaris1--devsac.sandbox.my.site.com/ESWFBchnEnhancedChatS1784625543677/assets/js/bootstrap.min.js"
+    onload="initEmbeddedMessaging()"
+  ></script>
+</body>
+</html>
