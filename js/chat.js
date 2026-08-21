@@ -79,33 +79,15 @@
     usernameDisplayEl.textContent = username || "(sin username)";
   }
 
-  function setPrechatUsername(username) {
-    const fieldName = config.prechatUsernameField || "Username";
-    const prechatApi = embeddedservice_bootstrap.prechatAPI;
-    if (!prechatApi) {
-      throw new Error("prechatAPI no está disponible todavía.");
-    }
-
-    const hiddenFields = {};
-    hiddenFields[fieldName] = username;
-    prechatApi.setHiddenPrechatFields(hiddenFields);
-
-    const visibleFields = {};
-    visibleFields[fieldName] = {
-      value: username,
-      isEditableByEndUser: false,
-    };
-    try {
-      prechatApi.setVisiblePrechatFields(visibleFields);
-    } catch (error) {
-      /* Visible pre-chat is optional if the field is configured as hidden. */
-    }
-  }
-
   function registerMessagingListeners() {
     window.addEventListener("onEmbeddedMessagingReady", async () => {
       const token = getStoredToken();
       const username = getStoredUsername();
+
+      embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({
+        Username: username,
+      });
+
       if (!token) {
         setStatus("Chat listo, pero no hay JWT.");
         return;
@@ -116,15 +98,10 @@
           identityTokenType: "JWT",
           identityToken: token,
         });
-        if (username) {
-          setPrechatUsername(username);
-          setStatus("JWT y Username enviados. El botón de chat debería aparecer.");
-        } else {
-          setStatus("JWT enviado. El botón de chat debería aparecer.");
-        }
+        setStatus("JWT y Username enviados. El botón de chat debería aparecer.");
         setError("");
       } catch (error) {
-        setStatus("No se pudo enviar el JWT o el pre-chat.");
+        setStatus("No se pudo enviar el JWT.");
         setError(error.message || String(error));
       }
     });
