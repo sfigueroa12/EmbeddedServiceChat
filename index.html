@@ -1,40 +1,160 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Enhanced Chat Test</title>
-</head>
-<body>
-  <h1>Prueba Enhanced Chat</h1>
-  <p>Si todo está bien configurado, verás el botón de chat en la esquina inferior.</p>
-
-  <script type="text/javascript">
-    function initEmbeddedMessaging() {
-      try {
-        window.addEventListener("onEmbeddedMessagingReady", () => {
-          embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({
-            Username: 'sfigueroa@ayesa-digital.com'
-          });
-        });
-        embeddedservice_bootstrap.settings.language = 'es';
-        embeddedservice_bootstrap.init(
-          '00Dba000002x8Ob',
-          'FB_chn_Enhanced_Chat_SAC',
-          'https://polaris1--devsac.sandbox.my.site.com/ESWFBchnEnhancedChatS1784625543677',
-          {
-            scrt2URL: 'https://polaris1--devsac.sandbox.my.salesforce-scrt.com'
-          }
-        );
-      } catch (err) {
-        console.error('Error loading Embedded Messaging: ', err);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Área reservada · prueba Enhanced Chat SAC</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f1ea;
+        --card: #ffffff;
+        --ink: #1d2a2e;
+        --muted: #5c6b70;
+        --line: #d9d2c5;
+        --accent: #0f6b4c;
       }
-    }
-  </script>
-  <script
-    type="text/javascript"
-    src="https://polaris1--devsac.sandbox.my.site.com/ESWFBchnEnhancedChatS1784625543677/assets/js/bootstrap.min.js"
-    onload="initEmbeddedMessaging()"
-  ></script>
-</body>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      header,
+      main,
+      footer {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 24px 20px;
+      }
+      header h1 {
+        margin: 0 0 8px;
+        font-size: 1.6rem;
+      }
+      header p,
+      .hint,
+      footer {
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 20px;
+      }
+      label {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      textarea {
+        width: 100%;
+        min-height: 140px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font-family: Consolas, monospace;
+        font-size: 0.85rem;
+      }
+      button {
+        margin-top: 12px;
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #5c6b70;
+      }
+      #error {
+        margin-top: 12px;
+        color: #9b1c1c;
+      }
+      .meta {
+        display: grid;
+        gap: 8px;
+        margin: 0 0 16px;
+      }
+      .meta span {
+        font-weight: 700;
+      }
+      ol {
+        padding-left: 20px;
+        color: var(--muted);
+      }
+      #status {
+        margin-top: 16px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Área reservada (prueba GitHub Pages)</h1>
+      <p>
+        Página estática para probar Enhanced Chat SAC con User Verification.
+        GitHub Pages no puede firmar el JWT: pégalo aquí después de generarlo
+        en local.
+      </p>
+    </header>
+
+    <main>
+      <section class="card" id="login-panel">
+        <label for="jwt-input">JWT del cliente de prueba</label>
+        <textarea
+          id="jwt-input"
+          placeholder="Pega aquí el JWT (header.payload.signature)"
+          autocomplete="off"
+        ></textarea>
+        <button id="start-chat" type="button">Simular login y abrir chat</button>
+        <p class="hint">
+          El JWT no se sube a GitHub. Solo se guarda en sessionStorage de esta
+          pestaña.
+        </p>
+      </section>
+
+      <section class="card" id="session-panel" hidden>
+        <div class="meta">
+          <div>sub: <span id="token-subject"></span></div>
+          <div>expira: <span id="token-expiry"></span></div>
+        </div>
+        <button id="logout" class="secondary" type="button">Cerrar sesión / clearSession</button>
+      </section>
+
+      <p id="status"></p>
+      <p id="error" hidden></p>
+
+      <section>
+        <h2>Antes de probar</h2>
+        <ol>
+          <li>
+            En Salesforce, añade tu URL de GitHub Pages a CORS y a los dominios
+            permitidos del Embedded Service Deployment. Ejemplo:
+            <code>https://tu-usuario.github.io</code>
+          </li>
+          <li>Republica el deployment si cambias dominios.</li>
+          <li>
+            Genera un JWT con el mismo <code>kid</code> e <code>iss</code> del
+            Keyset. El <code>sub</code> debe ser un ID estable de prueba.
+          </li>
+          <li>Pega el JWT arriba. El botón de chat aparece tras <code>setIdentityToken</code>.</li>
+        </ol>
+      </section>
+    </main>
+
+    <footer>
+      Canal: FB_chn_Enhanced_Chat_SAC_v1 · org PolarIS DEV SAC. No incluyas la
+      clave privada ni JWTs de producción en el repositorio.
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/chat.js"></script>
+  </body>
 </html>
