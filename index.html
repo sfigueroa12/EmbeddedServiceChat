@@ -51,14 +51,20 @@
         font-weight: 700;
         margin-bottom: 8px;
       }
-      textarea {
+      textarea,
+      input[type="text"] {
         width: 100%;
-        min-height: 140px;
         padding: 12px;
         border: 1px solid var(--line);
         border-radius: 8px;
-        font-family: Consolas, monospace;
         font-size: 0.85rem;
+      }
+      textarea {
+        min-height: 140px;
+        font-family: Consolas, monospace;
+      }
+      .field {
+        margin-bottom: 16px;
       }
       button {
         margin-top: 12px;
@@ -107,12 +113,23 @@
 
     <main>
       <section class="card" id="login-panel">
-        <label for="jwt-input">JWT del cliente de prueba</label>
-        <textarea
-          id="jwt-input"
-          placeholder="Pega aquí el JWT (header.payload.signature)"
-          autocomplete="off"
-        ></textarea>
+        <div class="field">
+          <label for="username-input">Username (pre-chat)</label>
+          <input
+            id="username-input"
+            type="text"
+            placeholder="Valor que se enviará al campo pre-chat Username"
+            autocomplete="off"
+          />
+        </div>
+        <div class="field">
+          <label for="jwt-input">JWT del cliente de prueba</label>
+          <textarea
+            id="jwt-input"
+            placeholder="Pega aquí el JWT (header.payload.signature)"
+            autocomplete="off"
+          ></textarea>
+        </div>
         <button id="start-chat" type="button">Simular login y abrir chat</button>
         <p class="hint">
           El JWT no se sube a GitHub. Solo se guarda en sessionStorage de esta
@@ -123,6 +140,7 @@
       <section class="card" id="session-panel" hidden>
         <div class="meta">
           <div>sub: <span id="token-subject"></span></div>
+          <div>username: <span id="prechat-username"></span></div>
           <div>expira: <span id="token-expiry"></span></div>
         </div>
         <button id="logout" class="secondary" type="button">Cerrar sesión / clearSession</button>
@@ -144,7 +162,12 @@
             Genera un JWT con el mismo <code>kid</code> e <code>iss</code> del
             Keyset. El <code>sub</code> debe ser un ID estable de prueba.
           </li>
-          <li>Pega el JWT arriba. El botón de chat aparece tras <code>setIdentityToken</code>.</li>
+          <li>
+            En el Embedded Service Deployment, crea el campo de pre-chat oculto
+            <code>Username</code> (mismo API Name) y mapealo en el canal. Luego
+            <strong>Publish</strong>.
+          </li>
+          <li>Pega el JWT y el Username. El botón de chat aparece tras <code>setIdentityToken</code>.</li>
         </ol>
       </section>
     </main>

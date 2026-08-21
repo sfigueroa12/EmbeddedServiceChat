@@ -1,13 +1,16 @@
 (function () {
-  const STORAGE_KEY = "sacChatIdentityToken";
+  const TOKEN_STORAGE_KEY = "sacChatIdentityToken";
+  const USERNAME_STORAGE_KEY = "sacChatPrechatUsername";
   const config = window.CHAT_CONFIG;
 
   const loginPanel = document.getElementById("login-panel");
   const sessionPanel = document.getElementById("session-panel");
   const jwtInput = document.getElementById("jwt-input");
+  const usernameInput = document.getElementById("username-input");
   const statusEl = document.getElementById("status");
   const subjectEl = document.getElementById("token-subject");
   const expiryEl = document.getElementById("token-expiry");
+  const usernameDisplayEl = document.getElementById("prechat-username");
   const startButton = document.getElementById("start-chat");
   const logoutButton = document.getElementById("logout");
   const errorEl = document.getElementById("error");
@@ -45,32 +48,64 @@
   }
 
   function getStoredToken() {
-    return sessionStorage.getItem(STORAGE_KEY);
+    return sessionStorage.getItem(TOKEN_STORAGE_KEY);
   }
 
-  function storeToken(token) {
-    sessionStorage.setItem(STORAGE_KEY, token);
+  function getStoredUsername() {
+    return sessionStorage.getItem(USERNAME_STORAGE_KEY) || "";
   }
 
-  function clearToken() {
-    sessionStorage.removeItem(STORAGE_KEY);
+  function storeSession(token, username) {
+    sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+    sessionStorage.setItem(USERNAME_STORAGE_KEY, username);
+  }
+
+  function clearSessionStorage() {
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(USERNAME_STORAGE_KEY);
   }
 
   function showLoggedOut() {
     loginPanel.hidden = false;
     sessionPanel.hidden = true;
     jwtInput.value = "";
+    usernameInput.value = "";
   }
 
-  function showLoggedIn(token) {
+  function showLoggedIn(token, username) {
     loginPanel.hidden = true;
     sessionPanel.hidden = false;
     describeToken(token);
+    usernameDisplayEl.textContent = username || "(sin username)";
+  }
+
+  function setPrechatUsername(username) {
+    const fieldName = config.prechatUsernameField || "Username";
+    const prechatApi = embeddedservice_bootstrap.prechatAPI;
+    if (!prechatApi) {
+      throw new Error("prechatAPI no está disponible todavía.");
+    }
+
+    const hiddenFields = {};
+    hiddenFields[fieldName] = username;
+    prechatApi.setHiddenPrechatFields(hiddenFields);
+
+    const visibleFields = {};
+    visibleFields[fieldName] = {
+      value: username,
+      isEditableByEndUser: false,
+    };
+    try {
+      prechatApi.setVisiblePrechatFields(visibleFields);
+    } catch (error) {
+      /* Visible pre-chat is optional if the field is configured as hidden. */
+    }
   }
 
   function registerMessagingListeners() {
     window.addEventListener("onEmbeddedMessagingReady", async () => {
       const token = getStoredToken();
+      const username = getStoredUsername();
       if (!token) {
         setStatus("Chat listo, pero no hay JWT.");
         return;
@@ -81,10 +116,15 @@
           identityTokenType: "JWT",
           identityToken: token,
         });
-        setStatus("JWT enviado. El botón de chat debería aparecer.");
+        if (username) {
+          setPrechatUsername(username);
+          setStatus("JWT y Username enviados. El botón de chat debería aparecer.");
+        } else {
+          setStatus("JWT enviado. El botón de chat debería aparecer.");
+        }
         setError("");
       } catch (error) {
-        setStatus("No se pudo enviar el JWT.");
+        setStatus("No se pudo enviar el JWT o el pre-chat.");
         setError(error.message || String(error));
       }
     });
@@ -129,6 +169,7 @@
 
   startButton.addEventListener("click", function () {
     const token = jwtInput.value.trim();
+    const username = usernameInput.value.trim();
     setError("");
 
     if (!token) {
@@ -143,8 +184,8 @@
       return;
     }
 
-    storeToken(token);
-    showLoggedIn(token);
+    storeSession(token, username);
+    showLoggedIn(token, username);
     setStatus("Sesión de prueba iniciada. Cargando Enhanced Chat…");
     loadSalesforceSnippet();
   });
@@ -156,7 +197,7 @@
         /* El logout de prueba debe continuar aunque Salesforce falle. */
       });
     }
-    clearToken();
+    clearSessionStorage();
     showLoggedOut();
     setStatus("Sesión de chat limpiada. Recarga la página si el widget sigue visible.");
   });
@@ -164,16 +205,17 @@
   const existingToken = getStoredToken();
   if (existingToken) {
     try {
-      showLoggedIn(existingToken);
+      const existingUsername = getStoredUsername();
+      showLoggedIn(existingToken, existingUsername);
       setStatus("JWT recuperado de esta pestaña. Cargando Enhanced Chat…");
       loadSalesforceSnippet();
     } catch (error) {
-      clearToken();
+      clearSessionStorage();
       showLoggedOut();
       setError("El JWT guardado no es válido. Pega uno nuevo.");
     }
   } else {
     showLoggedOut();
-    setStatus("Pega un JWT para simular el login del área reservada.");
+    setStatus("Pega un JWT y, si aplica, un Username para simular el login del área reservada.");
   }
 })();
