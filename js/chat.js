@@ -126,6 +126,7 @@
           scrt2URL: config.scrt2Url,
         });
       } catch (error) {
+        console.log("Error: " + JSON.stringify(error, null, 2));
         setStatus("Error al iniciar Embedded Messaging.");
         setError(error.message || String(error));
       }
