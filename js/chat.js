@@ -16,6 +16,7 @@
   const errorEl = document.getElementById("error");
 
   let chatInitialized = false;
+  let chatButtonCreated = false;
 
   function setStatus(message) {
     statusEl.textContent = message;
@@ -26,25 +27,54 @@
     errorEl.textContent = message || "";
   }
 
-  function decodeJwtPayload(token) {
+  function decodeJwtPart(part) {
+    const normalized = part.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+    return JSON.parse(atob(padded));
+  }
+
+  function decodeJwt(token) {
     const parts = token.split(".");
     if (parts.length < 2) {
       throw new Error("El valor pegado no es un JWT válido.");
     }
-    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const padded = payload + "=".repeat((4 - (payload.length % 4)) % 4);
-    return JSON.parse(atob(padded));
+    return {
+      header: decodeJwtPart(parts[0]),
+      payload: decodeJwtPart(parts[1]),
+    };
   }
 
   function describeToken(token) {
-    const claims = decodeJwtPayload(token);
-    subjectEl.textContent = claims.sub || "(sin sub)";
-    if (claims.exp) {
-      expiryEl.textContent = new Date(claims.exp * 1000).toLocaleString("es-ES");
+    const { header, payload } = decodeJwt(token);
+    const warnings = [];
+
+    subjectEl.textContent = payload.sub || "(sin sub)";
+    if (payload.exp) {
+      expiryEl.textContent = new Date(payload.exp * 1000).toLocaleString("es-ES");
+      if (payload.exp * 1000 <= Date.now()) {
+        warnings.push("El JWT ya está caducado (claim exp).");
+      }
     } else {
       expiryEl.textContent = "(sin exp)";
+      warnings.push("El JWT no tiene claim exp.");
     }
-    return claims;
+
+    const alg = header.alg || "";
+    if (alg !== "RS256" && alg !== "RS512") {
+      warnings.push("alg debe ser RS256 o RS512. Ahora es " + (alg || "(vacío)") + ".");
+    }
+    if (!header.kid) {
+      warnings.push("Falta kid en el header del JWT. Debe coincidir con la JWK del Keyset.");
+    }
+    if (!payload.iss) {
+      warnings.push("Falta iss. Debe coincidir con el JSON Web Key Issuer del Keyset.");
+    }
+    if (!payload.sub) {
+      warnings.push("Falta sub.");
+    }
+
+    setError(warnings.join(" "));
+    return { header, payload, warnings };
   }
 
   function getStoredToken() {
@@ -84,26 +114,46 @@
       const token = getStoredToken();
       const username = getStoredUsername();
 
-      embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({
-        Username: username,
-      });
-
       if (!token) {
         setStatus("Chat listo, pero no hay JWT.");
         return;
       }
 
       try {
-        await embeddedservice_bootstrap.userVerificationAPI.setIdentityToken({
+        embeddedservice_bootstrap.userVerificationAPI.setIdentityToken({
           identityTokenType: "JWT",
           identityToken: token,
         });
-        setStatus("JWT y Username enviados. El botón de chat debería aparecer.");
-        setError("");
+        if (username) {
+          embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({
+            Username: username,
+          });
+        }
+        setStatus(
+          "Token enviado al cliente. Esperando onEmbeddedMessagingButtonCreated. Sin ese evento el JWT no ha sido aceptado (Salesforce no suele pintar un error en consola)."
+        );
+        window.setTimeout(function () {
+          if (!chatButtonCreated) {
+            setStatus(
+              "El launcher no se ha creado. Eso encaja con un JWT rechazado en silencio: revisa kid, iss, firma RS256 y que el Keyset esté en el canal. En Red filtra scrt o iamessage."
+            );
+          }
+        }, 8000);
       } catch (error) {
         setStatus("No se pudo enviar el JWT.");
         setError(error.message || String(error));
       }
+    });
+
+    window.addEventListener("onEmbeddedMessagingButtonCreated", () => {
+      chatButtonCreated = true;
+      setStatus(
+        "Salesforce ha creado el botón de chat. Si no lo ves, está oculto (horario de oficina o hideChatButtonOnLoad). Mira la esquina inferior derecha."
+      );
+    });
+
+    window.addEventListener("onEmbeddedMessagingBusinessHoursEnded", () => {
+      setStatus("Fuera de horario de oficina: el botón puede crearse pero quedarse oculto.");
     });
 
     window.addEventListener("onEmbeddedMessagingIdentityTokenExpired", () => {
